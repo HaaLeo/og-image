@@ -91,7 +91,7 @@ interface FieldProps {
 const Field = ({ label, input }: FieldProps) => {
     return H('div',
         { className: 'field' },
-        H('label', 
+        H('label',
             H('div', {className: 'field-label'}, label),
             H('div', { className: 'field-value' }, input),
         ),
@@ -203,10 +203,10 @@ const App = (_: any, state: AppState, setState: SetState) => {
     const {
         fileType = 'png',
         fontSize = '100px',
-        theme = 'light',
+        theme = 'dark',
         md = true,
-        text = '**Hello** World',
-        images=[imageLightOptions[0].value],
+        text = 'publish-vscode-extension',
+        images=['file:///Users/leohanisch/_GIT/og-image/openvsx.png', 'https://marketplace.visualstudio.com/favicon.ico'],
         widths=[],
         heights=[],
         showToast = false,
@@ -216,7 +216,6 @@ const App = (_: any, state: AppState, setState: SetState) => {
         overrideUrl = null,
     } = state;
     const mdValue = md ? '1' : '0';
-    const imageOptions = theme === 'light' ? imageLightOptions : imageDarkOptions;
     const url = new URL(window.location.origin);
     url.pathname = `${encodeURIComponent(text)}.${fileType}`;
     url.searchParams.append('theme', theme);
@@ -243,9 +242,7 @@ const App = (_: any, state: AppState, setState: SetState) => {
                         options: themeOptions,
                         value: theme,
                         onchange: (val: Theme) => {
-                            const options = val === 'light' ? imageLightOptions : imageDarkOptions
                             let clone = [...images];
-                            clone[0] = options[selectedImageIndex].value;
                             setLoadingState({ theme: val, images: clone });
                         }
                     })
@@ -284,52 +281,14 @@ const App = (_: any, state: AppState, setState: SetState) => {
                         }
                     })
                 }),
-                H(Field, {
-                    label: 'Image 1',
-                    input: H('div',
-                        H(Dropdown, {
-                            options: imageOptions,
-                            value: imageOptions[selectedImageIndex].value,
-                            onchange: (val: string) =>  {
-                                let clone = [...images];
-                                clone[0] = val;
-                                const selected = imageOptions.map(o => o.value).indexOf(val);
-                                setLoadingState({ images: clone, selectedImageIndex: selected });
-                            }
-                        }),
-                        H('div',
-                            { className: 'field-flex' },
-                            H(Dropdown, {
-                                options: widthOptions,
-                                value: widths[0],
-                                small: true,
-                                onchange: (val: string) =>  {
-                                    let clone = [...widths];
-                                    clone[0] = val;
-                                    setLoadingState({ widths: clone });
-                                }
-                            }),
-                            H(Dropdown, {
-                                options: heightOptions,
-                                value: heights[0],
-                                small: true,
-                                onchange: (val: string) =>  {
-                                    let clone = [...heights];
-                                    clone[0] = val;
-                                    setLoadingState({ heights: clone });
-                                }
-                            })
-                        )
-                    ),
-                }),
-                ...images.slice(1).map((image, i) => H(Field, {
-                    label: `Image ${i + 2}`,
+                ...images.map((image, i) => H(Field, {
+                    label: `Image ${i + 1}`,
                     input: H('div',
                         H(TextInput, {
                             value: image,
                             oninput: (val: string) => {
                                 let clone = [...images];
-                                clone[i + 1] = val;
+                                clone[i] = val;
                                 setLoadingState({ images: clone, overrideUrl: url });
                             }
                         }),
@@ -337,21 +296,21 @@ const App = (_: any, state: AppState, setState: SetState) => {
                             { className: 'field-flex' },
                             H(Dropdown, {
                                 options: widthOptions,
-                                value: widths[i + 1],
+                                value: widths[i],
                                 small: true,
                                 onchange: (val: string) =>  {
                                     let clone = [...widths];
-                                    clone[i + 1] = val;
+                                    clone[i] = val;
                                     setLoadingState({ widths: clone });
                                 }
                             }),
                             H(Dropdown, {
                                 options: heightOptions,
-                                value: heights[i + 1],
+                                value: heights[i],
                                 small: true,
                                 onchange: (val: string) =>  {
                                     let clone = [...heights];
-                                    clone[i + 1] = val;
+                                    clone[i] = val;
                                     setLoadingState({ heights: clone });
                                 }
                             })
@@ -363,7 +322,7 @@ const App = (_: any, state: AppState, setState: SetState) => {
                     input: H(Button, {
                         label: `Add Image ${images.length + 1}`,
                         onclick: () => {
-                            const nextImage = images.length === 1
+                            const nextImage = images.length === 0
                                 ? 'https://cdn.jsdelivr.net/gh/remojansen/logo.ts@master/ts.svg'
                                 : '';
                             setLoadingState({ images: [...images, nextImage] })
@@ -378,7 +337,8 @@ const App = (_: any, state: AppState, setState: SetState) => {
                 src: overrideUrl ? overrideUrl.href : url.href,
                 loading: loading,
                 onload: () => setState({ loading: false }),
-                onerror: () => {
+                onerror: (error:string) => {
+                    console.log(error);
                     setState({ showToast: true, messageToast: 'Oops, an error occurred' });
                     setTimeout(() => setState({ showToast: false }), 2000);
                 },
